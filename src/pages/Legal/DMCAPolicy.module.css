@@ -1,0 +1,32 @@
+.container {
+    background-color: #222;
+    color: #FFFFFF;
+    padding: 40px 20px;
+    padding-top: 0;
+    font-family: sans-serif;
+    line-height: 1.6;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.heading {
+    color: #FF9041FF;
+    margin-top: 24px;
+    margin-bottom: 12px;
+    font-weight: bold;
+}
+
+.text {
+    color: #FFFFFF;
+    margin-bottom: 16px;
+}
+
+.list {
+    margin-bottom: 16px;
+    padding-left: 20px;
+}
+
+.listItem {
+    margin-bottom: 8px;
+    color: #FFFFFF;
+}
