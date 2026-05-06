@@ -23,7 +23,7 @@ export async function clientLoader({ request }: ClientLoaderFunctionArgs) {
     if (googleCode) {
         const googleResponse = await SignInWithGoogle(googleCode);
         if (googleResponse) {
-            throw redirect(from ?? "/");
+            return redirect(from ?? "/");
         }
     }
 }
