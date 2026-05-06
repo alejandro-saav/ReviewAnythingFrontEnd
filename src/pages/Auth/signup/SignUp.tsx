@@ -85,28 +85,28 @@ export default function SignUp(): ReactElement {
                                 <div className={styles.formGroup}>
                                     <label htmlFor="username">Username:<span className={styles.asterisk}> *</span></label>
                                     <input {...register("userName", { required: { value: true, message: "Username is required" }, maxLength: { value: 20, message: "Max 20 characters." }, minLength: { value: 5, message: "Min 5 characters." } })} type="text" placeholder="Username"
-                                        className={styles.formInput} id="username" name="UserName" />
+                                        className={styles.formInput} id="username" name="userName" />
                                     {errors.userName && <div className={styles.validationError}>{errors.userName.message}</div>}
                                 </div>
 
                                 <div className={styles.formGroup}>
                                     <label htmlFor="firstname">Firstname:<span className={styles.asterisk}> *</span></label>
                                     <input {...register("firstName", { required: { value: true, message: "Firstname is required" }, maxLength: { value: 30, message: "Max 30 characters" }, minLength: { value: 3, message: "Min 3 characters." } })} type="text"
-                                        placeholder="Firstname" className={styles.formInput} id="firstname" name="FirstName" />
+                                        placeholder="Firstname" className={styles.formInput} id="firstname" name="firstName" />
                                     {errors.firstName && <div className={styles.validationError}>{errors.firstName.message}</div>}
                                 </div>
 
                                 <div className={styles.formGroup}>
                                     <label htmlFor="email">Email:<span className={styles.asterisk}> *</span></label>
                                     <input {...register("email", { required: { value: true, message: "Email is required" } })} type="email"
-                                        placeholder="Email Address" className={styles.formInput} id="email" name="Email" />
+                                        placeholder="Email Address" className={styles.formInput} id="email" name="email" />
                                     {errors.email && <div className={styles.validationError}>{errors.email.message}</div>}
                                 </div>
 
                                 <div className={styles.formGroup}>
                                     <label htmlFor="password">Password:<span className={styles.asterisk}> *</span></label>
                                     <input {...register("password", { required: { value: true, message: "Password is required" }, minLength: { value: 8, message: "Min 8 characters" }, maxLength: { value: 50, message: "Max 50 characters" }, pattern: { value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*\W).+$/, message: "Password must contain at least one upper and lower case letter, one digit and one special character" } })} type="password"
-                                        placeholder="Password" className={styles.formInput} id="password" name="Password" />
+                                        placeholder="Password" className={styles.formInput} id="password" name="password" />
                                     {errors.password && <div className={styles.validationError}>{errors.password.message}</div>}
                                 </div>
                             </div>
@@ -114,14 +114,14 @@ export default function SignUp(): ReactElement {
                                 <div className={styles.formGroup}>
                                     <label htmlFor="lastname">Lastname:</label>
                                     <input {...register("lastName", { maxLength: { value: 30, message: "Max 30 characters" } })} type="text" placeholder="LastName"
-                                        className={styles.formInput} id="lastname" name="LastName" />
+                                        className={styles.formInput} id="lastname" name="lastName" />
                                     {errors.lastName && <div className={styles.validationError}>{errors.lastName.message}</div>}
                                 </div>
 
                                 <div className={styles.formGroup}>
                                     <label htmlFor="phone">Phone Number:</label>
                                     <input {...register("phone")} type="text"
-                                        placeholder="Phone number" className={styles.formInput} id="phone" name="Phone" />
+                                        placeholder="Phone number" className={styles.formInput} id="phone" name="phone" />
                                 </div>
 
                                 <div className={styles.uploadContainer}>
@@ -148,7 +148,7 @@ export default function SignUp(): ReactElement {
                                         </label>
                                     }
                                     <input {...register("profileImage")} id="profile-upload" accept="image/*" onChange={HandleImageSelected}
-                                        style={{ display: "none" }} name="ProfileImage" type="file" />
+                                        style={{ display: "none" }} name="profileImage" type="file" />
                                 </div>
 
                                 {!isNullOrWhiteSpace(imageErrorMessage) &&
@@ -159,7 +159,7 @@ export default function SignUp(): ReactElement {
                                     <label htmlFor="bio">Biography:</label>
                                     <textarea {...register("bio", { maxLength: { value: 500, message: "Max 500 characters" } })}
                                         placeholder="Bio max length(500)" className={styles.formInput} id="bio" maxLength={500}
-                                        style={{ resize: "none" }} name="Bio"></textarea>
+                                        style={{ resize: "none" }} name="bio"></textarea>
                                     {errors.bio && <div className={styles.validationError}>{errors.bio.message}</div>}
                                 </div>
                             </div>
