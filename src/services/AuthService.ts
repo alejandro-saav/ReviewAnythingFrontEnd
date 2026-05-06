@@ -82,7 +82,7 @@ export async function RegisterUserHandler(registerRequest: RegisterRequest): Pro
             formData.append("ProfileImage", registerRequest.profileImage);
         }
 
-        const response = await fetch(BASE_API_URL + "api/auth/register", {
+        const response = await fetch(BASE_API_URL + "/api/auth/register", {
             method: "POST",
             body: formData
         });
@@ -96,14 +96,13 @@ export async function RegisterUserHandler(registerRequest: RegisterRequest): Pro
     }
 }
 
-export async function SignInWithGoogle(googleToken: string): Promise<UserInformation | null> {
+export async function SignInWithGoogle(googleToken: string): Promise<any> {
     try {
         var response = await fetch(BASE_API_URL + "/api/auth/google-signin", {
             method: "POST",
             body: JSON.stringify({ IdToken: googleToken }),
             headers: {
                 "Content-Type": "application/json",
-                "X-Client-Type": "Browser"
             },
             credentials: "include"
         });

@@ -5,6 +5,23 @@ import { Link, redirect, useNavigate, useSearchParams, type ClientLoaderFunction
 import GoogleBtn from "../../../components/GoogleBtn";
 import styles from "./Login.module.css";
 
+export async function loader({ request }: ClientLoaderFunctionArgs) {
+    const url: URL = new URL(request.url);
+    const searchParams: URLSearchParams = url.searchParams;
+    const googleCode: string | null = searchParams.get("code");
+    const from: string | null = searchParams.get("state");
+    if (googleCode) {
+        const googleResponse = await SignInWithGoogle(googleCode);
+        if (googleResponse) {
+            return redirect(from ?? "/", {
+                headers: {
+                    "Set-Cookie": `accessToken=${googleResponse.token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800`,
+                },
+            });
+        }
+    }
+    return {}
+}
 
 export const meta: MetaFunction = () => {
     return [
@@ -15,18 +32,18 @@ export const meta: MetaFunction = () => {
     ];
 };
 
-export async function clientLoader({ request }: ClientLoaderFunctionArgs) {
-    const url: URL = new URL(request.url);
-    const searchParams: URLSearchParams = url.searchParams;
-    const googleCode: string | null = searchParams.get("code");
-    const from: string | null = searchParams.get("state");
-    if (googleCode) {
-        const googleResponse = await SignInWithGoogle(googleCode);
-        if (googleResponse) {
-            return redirect(from ?? "/");
-        }
-    }
-}
+// export async function clientLoader({ request }: ClientLoaderFunctionArgs) {
+//     const url: URL = new URL(request.url);
+//     const searchParams: URLSearchParams = url.searchParams;
+//     const googleCode: string | null = searchParams.get("code");
+//     const from: string | null = searchParams.get("state");
+//     if (googleCode) {
+//         const googleResponse = await SignInWithGoogle(googleCode);
+//         if (googleResponse) {
+//             return redirect(from ?? "/");
+//         }
+//     }
+// }
 
 export default function Login(): ReactElement {
     const navigate = useNavigate();
