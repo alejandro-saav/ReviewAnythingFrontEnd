@@ -3,7 +3,7 @@
   publish = "build/client"
 
 [functions]
-  node_bundle = true
+  node_bundle = "esbuild"
 
 [[redirects]]
   from = "/*"

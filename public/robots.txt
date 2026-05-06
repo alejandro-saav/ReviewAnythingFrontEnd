@@ -1,0 +1,15 @@
+# public/robots.txt
+User-agent: *
+Allow: /
+Disallow: /login
+Disallow: /signup
+Disallow: /edit-profile
+Disallow: /my-reviews
+Disallow: /my-comments
+Disallow: /liked-reviews
+Disallow: /reset-password
+Disallow: /forgot-password
+Disallow: /confirm-email
+Disallow: /email-confirmation-required
+
+Sitemap: https://reviewanything.site/sitemap.xml
