@@ -57,6 +57,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
             });
         }
     }
+    console.log("accessToken from root loader:", accessToken);
     if (accessToken) {
         userInfo = await GetUserInfo(accessToken.substring(accessToken.indexOf("=") + 1));
     }

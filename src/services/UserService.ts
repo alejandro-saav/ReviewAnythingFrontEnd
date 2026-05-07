@@ -5,6 +5,7 @@ import { BASE_API_URL } from "../utils/const";
 
 export async function GetUserInfo(userToken: string): Promise<UserInformation | null> {
     try {
+        console.log("UserToken:", userToken);
         const response = await fetch(BASE_API_URL + "/api/user/summary", { headers: { "Authorization": `Bearer ${userToken}` } });
         if (!response.ok) return null;
         return await response.json();

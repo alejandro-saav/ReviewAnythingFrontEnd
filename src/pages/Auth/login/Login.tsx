@@ -32,19 +32,6 @@ export const meta: MetaFunction = () => {
     ];
 };
 
-// export async function clientLoader({ request }: ClientLoaderFunctionArgs) {
-//     const url: URL = new URL(request.url);
-//     const searchParams: URLSearchParams = url.searchParams;
-//     const googleCode: string | null = searchParams.get("code");
-//     const from: string | null = searchParams.get("state");
-//     if (googleCode) {
-//         const googleResponse = await SignInWithGoogle(googleCode);
-//         if (googleResponse) {
-//             return redirect(from ?? "/");
-//         }
-//     }
-// }
-
 export default function Login(): ReactElement {
     const navigate = useNavigate();
 
