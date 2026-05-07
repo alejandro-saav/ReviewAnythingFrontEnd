@@ -2,19 +2,17 @@ import { useState, type ReactElement } from "react";
 import styles from "./Nav.module.css";
 import { type UserInformation } from "../../types/AuthTypes";
 import { isNullOrWhiteSpace } from "../../utils/helperFunctions";
-import { Link, NavLink, useNavigate, useRouteLoaderData } from "react-router-dom";
-import { Logout } from "../../services/AuthService";
+import { Link, NavLink, useFetcher, useRouteLoaderData } from "react-router-dom";
 import type { loader as rootLoader } from "../root";
 
 
 export default function Nav(): ReactElement {
     const [showModal, setShowModal] = useState<boolean>(false);
     const user: UserInformation | null | undefined = useRouteLoaderData<typeof rootLoader>("root")?.userInfo;
-    const navigate = useNavigate();
+    const fetcher = useFetcher();
     async function HandleLogout(): Promise<void> {
-        const logoutResponse = await Logout();
+        fetcher.submit(null, { method: "POST", action: "/logout" });
         setShowModal(false);
-        navigate("/");
     }
     return (
         <nav className={styles.navbar}>

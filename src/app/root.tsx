@@ -2,45 +2,6 @@ import { Outlet, Scripts, ScrollRestoration, Meta, Links, type LoaderFunctionArg
 import { GetUserInfo, PostNewVisit } from "../services/UserService.ts";
 import type { UserInformation } from "../types/AuthTypes.ts";
 
-// function AppLoader() {
-//     const dispatch = useDispatch();
-//     useEffect(() => {
-//         async function fetchUserInfo() {
-//             const user = await GetUserInfo();
-//             if (user != null) dispatch(setUser(user));
-//         }
-
-//         async function LogNewVisit(): Promise<void> {
-//             if (typeof cookieStore !== "undefined") {
-//                 if (await cookieStore.get("visit_tracked") != null) return;
-//                 const logResponse = await PostNewVisit();
-//                 if (logResponse) {
-//                     try {
-//                         await cookieStore.set({
-//                             name: "visit_tracked",
-//                             value: "1",
-//                             expires: Date.now() + (30 * 60 * 1000),
-//                             sameSite: "lax"
-//                         });
-//                     } catch (error) {
-//                     }
-//                 }
-//             } else {
-//                 if (!document.cookie.includes("visit_tracked")) {
-//                     const logResponse = await PostNewVisit();
-//                     if (logResponse) {
-//                         document.cookie = "visit_tracked=1; max-age=1800; path=/; samesite=lax"
-//                     }
-//                 }
-//             }
-//         }
-//         fetchUserInfo();
-//         LogNewVisit();
-//     }, [dispatch])
-
-//     return <Outlet />
-// }
-
 export async function loader({ request }: LoaderFunctionArgs) {
     const cookies: string[] | undefined = request.headers.get("Cookie")?.split(";");
     let visitCookie: Cookie | null = null;
@@ -57,7 +18,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
             });
         }
     }
-    console.log("accessToken from root loader:", accessToken);
     if (accessToken) {
         userInfo = await GetUserInfo(accessToken.substring(accessToken.indexOf("=") + 1));
     }

@@ -13,6 +13,7 @@ export default [
         route("privacy-policy", "../pages/Legal/PrivacyPolicy.tsx"),
         route("community-guidelines", "../pages/Legal/CommunityGuidelines.tsx"),
         route("DMCAPolicy", "../pages/Legal/DMCAPolicy.tsx"),
+        route("logout", "../pages/Auth/logout/Logout.tsx"),
 
         layout("./layout/ProtectedRoutes.tsx", [
             route("write-review", "../pages/write-review/WriteReview.tsx"),
