@@ -1,15 +1,14 @@
 import { type UpdateUserInfoRequest, type UserInformation } from "../../types/AuthTypes";
-import { isNullOrWhiteSpace } from "../../utils/helperFunctions";
+import { GetAccessTokenFromRequest, isNullOrWhiteSpace } from "../../utils/helperFunctions";
 import LoadingSpinner from "../../components/loadingComponents/LoadingSpinner";
 import { useState } from "react";
 import styles from "./EditProfile.module.css";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { DeleteAccount, UpdateUserInfo } from "../../services/UserService";
-import { Logout } from "../../services/AuthService";
-import { useNavigate, useRevalidator, useRouteLoaderData } from "react-router-dom";
+import { redirect, useFetcher, useRouteLoaderData } from "react-router-dom";
 import type { loader as rootLoader } from "../../app/root";
 
-import type { MetaFunction } from "react-router";
+import type { ClientActionFunctionArgs, MetaFunction } from "react-router";
 
 export const meta: MetaFunction = () => {
     return [
@@ -20,11 +19,32 @@ export const meta: MetaFunction = () => {
     ];
 };
 
+export async function action({ request }: ClientActionFunctionArgs) {
+    const authToken = GetAccessTokenFromRequest(request);
+    if (request.method == "POST") {
+        const data: FormData = await request.formData();
+        if (!authToken) return redirect("/");
+        const updateProfileDataRequest = await UpdateUserInfo(data, authToken);
+        if (!updateProfileDataRequest) {
+            return { postActionError: "Something went wrong, please try again." }
+        }
+    } else {
+        if (!authToken) return redirect("/");
+        const deleteResponse = await DeleteAccount();
+        if (!deleteResponse) return { deleteError: "Could not delete your account. Please try again." }
+        return redirect("/");
+    }
+}
+
 export default function EditProfile() {
     const user: UserInformation = useRouteLoaderData<typeof rootLoader>("root")!.userInfo!;
+    const saveFetcher = useFetcher();
+    const deleteFetcher = useFetcher();
 
+    const saveActionData = saveFetcher.data;
+    const deleteActionData = deleteFetcher.data;
 
-    const { register, handleSubmit, setError, formState: { errors, isSubmitting, isDirty }, setValue } = useForm<UpdateUserInfoRequest>({
+    const { register, handleSubmit, formState: { errors, isDirty }, setValue } = useForm<UpdateUserInfoRequest>({
         defaultValues: {
             firstName: user.firstName,
             lastName: user.lastName,
@@ -33,13 +53,9 @@ export default function EditProfile() {
             deleteImage: false,
         }
     });
-
     const [imageErrorMessage, setImageErrorMessage] = useState<string | null>(null);
     const [imageNameSelected, setImageNameSelected] = useState<string | null>(null);
     const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(user.profileImage);
-    const [deleteAccountError, setDeleteAccountError] = useState<string | null>(null);
-    const [isDeletingAccount, setIsDeletingAccount] = useState(false);
-    const navigate = useNavigate();
 
     function HandleRemovePhoto() {
         setImageNameSelected(null);
@@ -78,39 +94,23 @@ export default function EditProfile() {
         setValue("deleteImage", false);
     }
 
-    const { revalidate } = useRevalidator();
-
     async function HandleDeleteAccount(): Promise<void> {
         if (!window.confirm("Permanently delete your account? This cannot be undone.")) return;
-        setDeleteAccountError(null);
-        setIsDeletingAccount(true);
-        try {
-            const deleted = await DeleteAccount();
-            if (!deleted) {
-                setDeleteAccountError("Could not delete your account. Please try again.");
-                return;
-            }
-            await Logout();
-            navigate("/");
-        } finally {
-            setIsDeletingAccount(false);
-        }
+        deleteFetcher.submit(null, { method: "DELETE" });
     }
 
     const onSubmit: SubmitHandler<UpdateUserInfoRequest> = async (data) => {
-        var uploadProfileResponse = await UpdateUserInfo(data);
-        if (uploadProfileResponse == null) {
-            setError("root.serverError", {
-                type: "server",
-                message: "Something went wrong, please try again."
-            })
-            return;
-        }
-        // dispatch(setUser(uploadProfileResponse!));
-        // NEET TO REVALIDATE USER INFO
-        revalidate();
-    }
+        const formData = new FormData();
+        formData.append("FirstName", data.firstName ?? "");
+        formData.append("LastName", data.lastName ?? "");
+        formData.append("Bio", data.bio ?? "");
+        formData.append("DeleteImage", data.deleteImage ? "true" : "false");
 
+        if (data.profileImage != null) {
+            formData.append("ProfileImage", data.profileImage!);
+        }
+        saveFetcher.submit(formData, { method: "POST", encType: "multipart/form-data" });
+    }
     return (
         <div className={styles.editProfileContainer}>
             <div className={styles.editProfileWrapper}>
@@ -177,14 +177,14 @@ export default function EditProfile() {
 
                     <div className={styles.actionButtons}>
                         <button type="submit" className={`${styles.btn} ${styles.btnPrimary}`} disabled={!isDirty}>
-                            {isSubmitting ?
+                            {saveFetcher.state == "submitting" ?
                                 <LoadingSpinner />
                                 :
                                 <span>Save Changes</span>
                             }
                         </button>
                     </div>
-                    {errors.root && <span className={styles.validationError}>{errors.root.message}</span>}
+                    {saveActionData?.postActionError && <span className={styles.validationError}>{saveActionData.postActionError}</span>}
                 </form>
 
                 <div className={styles.dangerZone}>
@@ -196,12 +196,12 @@ export default function EditProfile() {
                         type="button"
                         className={styles.deleteAccountBtn}
                         onClick={HandleDeleteAccount}
-                        disabled={isDeletingAccount}
+                        disabled={deleteFetcher.state == "submitting"}
                     >
-                        {isDeletingAccount ? <LoadingSpinner /> : "Delete account"}
+                        {deleteFetcher.state == "submitting" ? <LoadingSpinner /> : "Delete account"}
                     </button>
-                    {deleteAccountError && (
-                        <div className={styles.validationError}>{deleteAccountError}</div>
+                    {deleteActionData?.deleteError && (
+                        <div className={styles.validationError}>{deleteActionData?.deleteError}</div>
                     )}
                 </div>
             </div>

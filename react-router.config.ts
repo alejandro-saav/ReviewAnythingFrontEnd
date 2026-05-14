@@ -4,6 +4,9 @@ import { GetLatestUserIds } from "./src/services/UserService";
 export default {
     appDirectory: "src/app",
     ssr: true,
+    future: {
+        v8_middleware: true,
+    }
 
     // async prerender() {
     //     let reviewRoutes: string[] = [];

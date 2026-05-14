@@ -1,7 +1,7 @@
-import { useState, type ReactElement } from "react";
+import { useEffect, useState, type ReactElement } from "react";
 import styles from "./Review.module.css"
-import { Link, redirect, useLoaderData, useRouteLoaderData, type LoaderFunctionArgs, type MetaFunction } from "react-router-dom";
-import { FetchReviewPageData, PostReviewVote } from "../../services/ReviewService";
+import { Link, redirect, useFetcher, useLoaderData, useRouteLoaderData, type ClientActionFunctionArgs, type LoaderFunctionArgs, type MetaFunction } from "react-router-dom";
+import { FetchReviewPageData, PostComment, PostReviewVote } from "../../services/ReviewService";
 import type { ReviewPageData } from "../../types/ReviewTypes";
 import ProfileIcon from "../../components/ProfileIcon";
 import { formatDate, GetAccessTokenFromRequest, isNullOrWhiteSpace } from "../../utils/helperFunctions";
@@ -18,6 +18,31 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     const accessToken: string | null = GetAccessTokenFromRequest(request);
     const review = await FetchReviewPageData(+reviewId, accessToken);
     return { reviewData: review }
+}
+
+export async function action({ request }: ClientActionFunctionArgs) {
+    const authToken: string | null = GetAccessTokenFromRequest(request);
+    if (!authToken) return redirect("/login");
+    const data = await request.json();
+    switch (data.type) {
+        case "followUser":
+            delete data.type;
+            await FollowUser(data.targetUserId, authToken);
+            break;
+        case "unfollowUser":
+            delete data.type;
+            await UnFollowUser(data.targetUserId, authToken);
+            break;
+        case "postVote":
+            delete data.type;
+            await PostReviewVote(data.reviewId, data.voteType, authToken);
+            break;
+        case "submitComment":
+            delete data.type;
+            const newComment = await PostComment(data.reviewId, data.comment, authToken);
+            return { comment: newComment }
+            break;
+    }
 }
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
@@ -76,6 +101,15 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 
 export default function Review(): ReactElement {
     const { reviewData } = useLoaderData<typeof loader>();
+    const fetcher = useFetcher();
+    const commentFetcher = useFetcher();
+    useEffect(() => {
+        if (commentFetcher.data) {
+            setReview(prev => {
+                return { ...prev, comments: [...prev.comments, commentFetcher.data.comment] }
+            });
+        }
+    }, [commentFetcher.data])
     if (reviewData == null) {
         return <div className={styles.errorMessage}>Something went wrong while loading the review, please try reloading the page.</div>
     }
@@ -91,16 +125,12 @@ export default function Review(): ReactElement {
             return;
         }
         if (review?.followedUserIds.includes(targetUserId)) {
-            const unfollowResponse = await UnFollowUser(+targetUserId);
-            if (unfollowResponse) {
-                setReview({ ...review, followedUserIds: review.followedUserIds.filter(userIds => userIds != targetUserId) })
-            }
+            fetcher.submit({ targetUserId: +targetUserId, type: "unfollowUser" }, { method: "POST", encType: "application/json" });
+            setReview({ ...review, followedUserIds: review.followedUserIds.filter(userIds => userIds != targetUserId) })
         } else {
             if (review == undefined) return;
-            const followResponse = await FollowUser(+targetUserId);
-            if (followResponse) {
-                setReview({ ...review, followedUserIds: [...review.followedUserIds, targetUserId] })
-            }
+            fetcher.submit({ targetUserId: +targetUserId, type: "followUser" }, { method: "POST", encType: "application/json" });
+            setReview({ ...review, followedUserIds: [...review.followedUserIds, targetUserId] })
         }
     }
 
@@ -113,18 +143,13 @@ export default function Review(): ReactElement {
 
         if (vote != 1 && vote != -1) return;
 
-        const submitCommentResponse = await PostReviewVote(+review?.review.reviewId!, vote);
-        if (submitCommentResponse) {
-            setReview((prev: ReviewPageData) => {
-                let newReviewCount = vote == 1 && (prev.userReviewVote == -1 || prev.userReviewVote == null) ? prev.review.upVoteCount++ : prev.userReviewVote == 1 && (vote == -1 || vote == 1) ? prev.review.upVoteCount-- : prev.review.upVoteCount;
+        fetcher.submit({ reviewId: +review?.review.reviewId, voteType: vote, type: "postVote" }, { method: "POST", encType: "application/json" });
+        setReview((prev: ReviewPageData) => {
+            let newReviewCount = vote == 1 && (prev.userReviewVote == -1 || prev.userReviewVote == null) ? prev.review.upVoteCount++ : prev.userReviewVote == 1 && (vote == -1 || vote == 1) ? prev.review.upVoteCount-- : prev.review.upVoteCount;
 
-                let newVote = prev.userReviewVote == vote ? null : vote;
-                return { ...prev, userReviewVote: newVote, review: { ...prev.review, upVoteCount: newReviewCount } }
-            });
-        } else {
-            // Something went wrong with the post request.
-            console.log("FAILED!");
-        };
+            let newVote = prev.userReviewVote == vote ? null : vote;
+            return { ...prev, userReviewVote: newVote, review: { ...prev.review, upVoteCount: newReviewCount } }
+        });
         setDisableVoteBtn(false);
     }
     return (
@@ -199,7 +224,7 @@ export default function Review(): ReactElement {
                                 <LikeDislikeBtn btnType="dislike" isActive={review.userReviewVote == -1} SubmitReviewVote={SubmitReviewVote} context="review" disable={disableVoteBtn} />
                             </div>
                         </div>
-                        <CommentSection HandleUserFollow={HandleUserFollow} comments={review.comments} userCommentVotes={review.commentVotes} usersFollowingIds={review.followedUserIds} HandleModal={setShowModal} reviewId={+review.review.reviewId!} HandleReviewPageData={setReview} />
+                        <CommentSection fetcher={commentFetcher} HandleUserFollow={HandleUserFollow} comments={review.comments} userCommentVotes={review.commentVotes} usersFollowingIds={review.followedUserIds} HandleModal={setShowModal} reviewId={+review.review.reviewId!} HandleReviewPageData={setReview} />
                     </div >
                 </div >
             }

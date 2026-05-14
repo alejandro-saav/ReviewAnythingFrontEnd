@@ -74,14 +74,14 @@ export async function PostCommentVote(commentVote: CommentVoteRequest): Promise<
     }
 }
 
-export async function PostComment(reviewId: number, comment: string): Promise<Comment | null> {
+export async function PostComment(reviewId: number, comment: string, authToken: string): Promise<Comment | null> {
     try {
         const response = await fetch(BASE_API_URL + `/api/comment`, {
             method: "POST",
             body: JSON.stringify({ ReviewId: reviewId, Content: comment }),
-            credentials: "include",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${authToken}`
             }
         });
 
@@ -93,14 +93,14 @@ export async function PostComment(reviewId: number, comment: string): Promise<Co
     }
 }
 
-export async function PostReviewVote(reviewId: number, voteType: number): Promise<number | null> {
+export async function PostReviewVote(reviewId: number, voteType: number, authToken: string): Promise<number | null> {
     try {
         const response = await fetch(BASE_API_URL + `/api/reviews/review-votes`, {
             method: "POST",
             body: JSON.stringify({ ReviewId: reviewId, VoteType: voteType }),
-            credentials: "include",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${authToken}`
             }
         });
 
@@ -111,14 +111,14 @@ export async function PostReviewVote(reviewId: number, voteType: number): Promis
     }
 }
 
-export async function PostReview(review: WriteReviewModel): Promise<ReviewModel | null> {
+export async function PostReview(review: WriteReviewModel, authToken: string): Promise<ReviewModel | null> {
     try {
         const response = await fetch(BASE_API_URL + `/api/reviews`, {
             method: "POST",
             body: JSON.stringify(review),
-            credentials: "include",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${authToken}`
             }
         });
         if (!response.ok) return null;

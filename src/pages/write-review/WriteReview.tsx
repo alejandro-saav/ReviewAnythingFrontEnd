@@ -4,10 +4,11 @@ import { FetchCategories, PostReview } from "../../services/ReviewService";
 import { CATEGORIES_FALLBACK, TAG_REGEX } from "../../utils/const";
 import { useForm, Controller, type SubmitHandler } from "react-hook-form";
 import styles from "./WriteReview.module.css"
-import { isNullOrWhiteSpace } from "../../utils/helperFunctions";
-import { useNavigate } from "react-router-dom";
+import { GetAccessTokenFromRequest, isNullOrWhiteSpace } from "../../utils/helperFunctions";
+import { redirect, useFetcher } from "react-router-dom";
 
-import type { MetaFunction } from "react-router";
+import type { ActionFunctionArgs, MetaFunction } from "react-router";
+import LoadingSpinner from "../../components/loadingComponents/LoadingSpinner";
 
 export const meta: MetaFunction = () => {
     const title = "Write a Review | ReviewAnything";
@@ -33,7 +34,18 @@ export const meta: MetaFunction = () => {
     ];
 };
 
+export async function action({ request }: ActionFunctionArgs) {
+    const authToken = GetAccessTokenFromRequest(request);
+    const reviewData = await request.json();
+    if (!authToken) return redirect("/login");
+    const response = await PostReview(reviewData, authToken);
+    if (response) return redirect(`/review/${response.reviewId}`);
+    if (!response) return { error: "Something went wrong when trying to post your review, please try again." }
+}
+
 export default function WriteReview(): ReactElement {
+    const fetcher = useFetcher();
+    let postReviewError = fetcher.data;
     const [categories, setCategories] = useState<Category[]>(CATEGORIES_FALLBACK);
     const [hoverStar, setHoverStar] = useState<number>(0);
     const [newTag, setNewTag] = useState<string>("");
@@ -85,18 +97,9 @@ export default function WriteReview(): ReactElement {
         setValue("tags", currentTags.filter(t => t != tag))
     }
 
-    const navigate = useNavigate();
-
     const OnSubmitReview: SubmitHandler<WriteReviewModel> = async (data) => {
-        const postReviewResponse = await PostReview(data);
-        if (postReviewResponse) {
-            navigate(`/review/${postReviewResponse.reviewId}`);
-        } else {
-            setError("root", {
-                type: "root",
-                message: "Something went wrong when trying to post your review, please try again."
-            })
-        }
+        postReviewError = undefined;
+        fetcher.submit({ ...data }, { method: "POST", encType: "application/json" });
     }
     return (
         <div className={styles.writeReviewContainer}>
@@ -131,7 +134,7 @@ export default function WriteReview(): ReactElement {
                             />
                         </div>
                         <textarea id="reviewContent" className={`${styles.formInput} ${styles.formTextarea}`}
-                            placeholder="Share your thoughts and experience..." {...register("content", { required: { value: true, message: "This field is required" }, maxLength: { value: 10000, message: "Max length allow is 10.000 characters" }, minLength: { value: 100, message: "Min length is 500 characters" } })}>
+                            placeholder="Share your thoughts and experience..." {...register("content", { required: { value: true, message: "This field is required" }, maxLength: { value: 10000, message: "Max length allow is 10.000 characters" }, minLength: { value: 30, message: "Min length is 30 characters" } })}>
                         </textarea>
                         {errors.content && <span className={styles.errorMessage}>{errors.content.message}</span>}
                         <div className={styles.displayTagsContainer} >
@@ -169,9 +172,9 @@ export default function WriteReview(): ReactElement {
                         </select>
                     </div>
                     {errors.categoryId && <span className={styles.errorMessage}>{errors.categoryId.message}</span>}
-                    <button type="submit" className={styles.submitBtn}>Create Review</button>
+                    <button type="submit" className={styles.submitBtn}>{fetcher.state == "submitting" ? <LoadingSpinner /> : "Create Review"}</button>
                 </form >
-                {errors.root && <span className={styles.errorMessage}>{errors.root.message}</span>}
+                {postReviewError?.error && <span className={styles.errorMessage}>{postReviewError.error}</span>}
             </div >
         </div >
     )

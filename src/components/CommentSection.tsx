@@ -4,8 +4,8 @@ import type { UserInformation } from "../types/AuthTypes";
 import { formatDate, isNullOrWhiteSpace } from "../utils/helperFunctions";
 import LoadingSpinner from "./loadingComponents/LoadingSpinner";
 import styles from "./CommentSection.module.css"
-import { Link, useRouteLoaderData } from "react-router-dom";
-import { PostComment, PostCommentVote } from "../services/ReviewService";
+import { Link, useRouteLoaderData, type FetcherWithComponents } from "react-router-dom";
+import { PostCommentVote } from "../services/ReviewService";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import LikeDislikeBtn from "./LikeDislikeBtn";
 import type { loader as rootLoader } from "../app/root";
@@ -18,32 +18,23 @@ interface CommentSectionProps {
     HandleModal: (showModal: boolean) => void;
     HandleReviewPageData: Dispatch<SetStateAction<ReviewPageData>>;
     reviewId: number;
+    fetcher: FetcherWithComponents<any>;
 }
 
 interface CommentForm {
     comment: string;
 }
 
-export default function CommentSection({ comments, usersFollowingIds, userCommentVotes, HandleUserFollow, HandleModal, reviewId, HandleReviewPageData }: CommentSectionProps): ReactElement {
+export default function CommentSection({ comments, usersFollowingIds, userCommentVotes, HandleUserFollow, HandleModal, reviewId, HandleReviewPageData, fetcher }: CommentSectionProps): ReactElement {
     const user: UserInformation | null | undefined = useRouteLoaderData<typeof rootLoader>("root")?.userInfo;
 
 
-    const { register, handleSubmit, setError, formState: { errors, isSubmitting, isValid } } = useForm<CommentForm>({ mode: "onChange" });
+    const { register, handleSubmit, formState: { errors, isSubmitting, isValid } } = useForm<CommentForm>({ mode: "onChange" });
 
     const [disableVoteBtn, setDisableVoteBtn] = useState<boolean>(false);
 
     const onSubmitComment: SubmitHandler<CommentForm> = async (data) => {
-        const postCommentResponse: Comment | null = await PostComment(reviewId, data.comment);
-        if (postCommentResponse == null) {
-            setError("root.serverError", {
-                type: "server",
-                message: "Something went wrong, please try again."
-            })
-        } else {
-            HandleReviewPageData(prev => {
-                return { ...prev, comments: [...comments, postCommentResponse] }
-            })
-        }
+        fetcher.submit({ ...data, type: "submitComment", reviewId: reviewId }, { method: "POST", encType: "application/json" });
     }
 
     function UserHasVotedComment(commentId: number, voteType: number) {

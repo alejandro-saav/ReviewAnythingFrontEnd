@@ -1,4 +1,4 @@
-import { redirect, type LoaderFunctionArgs } from "react-router-dom";
+import { redirect } from "react-router-dom";
 
 export async function action() {
     return redirect("/", {

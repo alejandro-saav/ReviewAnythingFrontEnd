@@ -25,21 +25,14 @@ export async function DeleteAccount(): Promise<boolean> {
     }
 }
 
-export async function UpdateUserInfo(userInfo: UpdateUserInfoRequest): Promise<UserInformation | null> {
+export async function UpdateUserInfo(userInfo: FormData, authToken: string): Promise<UserInformation | null> {
     try {
-        const formData = new FormData();
-        formData.append("FirstName", userInfo.firstName ?? "");
-        formData.append("LastName", userInfo.lastName ?? "");
-        formData.append("Bio", userInfo.bio ?? "");
-        formData.append("DeleteImage", userInfo.deleteImage ? "true" : "false");
-
-        if (userInfo.profileImage != null) {
-            formData.append("ProfileImage", userInfo.profileImage!);
-        }
         const response = await fetch(BASE_API_URL + "/api/user/summary", {
-            credentials: "include",
+            headers: {
+                "Authorization": `Bearer ${authToken}`
+            },
             method: "PATCH",
-            body: formData
+            body: userInfo
         });
         if (!response.ok) throw new Error();
         return await response.json();
@@ -74,11 +67,13 @@ export async function GetUserPageData(userId: number): Promise<UserPageData | nu
     }
 }
 
-export async function FollowUser(userId: number): Promise<boolean> {
+export async function FollowUser(userId: number, authToken: string): Promise<boolean> {
     try {
         const response = await fetch(BASE_API_URL + `/api/user/${userId}/follow`, {
-            credentials: "include",
-            method: "POST"
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${authToken}`
+            }
         });
         if (!response.ok) return false;
 
@@ -88,11 +83,13 @@ export async function FollowUser(userId: number): Promise<boolean> {
     }
 }
 
-export async function UnFollowUser(userId: number): Promise<boolean> {
+export async function UnFollowUser(userId: number, authToken: string): Promise<boolean> {
     try {
         const response = await fetch(BASE_API_URL + `/api/user/${userId}/follow`, {
-            credentials: "include",
-            method: "DELETE"
+            method: "DELETE",
+            headers: {
+                "Authorization": `Bearer ${authToken}`
+            }
         });
         if (!response.ok) return false;
 
