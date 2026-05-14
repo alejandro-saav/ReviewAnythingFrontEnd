@@ -1,7 +1,7 @@
 import { type ReactElement, useState } from "react";
 import type { LoginRequest } from "../../../types/AuthTypes";
 import { LoginHandler, SignInWithGoogle } from "../../../services/AuthService";
-import { Link, redirect, useNavigate, useSearchParams, type ClientLoaderFunctionArgs, type MetaFunction } from "react-router-dom";
+import { Link, redirect, useFetcher, useSearchParams, type ActionFunctionArgs, type ClientLoaderFunctionArgs, type MetaFunction } from "react-router-dom";
 import GoogleBtn from "../../../components/GoogleBtn";
 import styles from "./Login.module.css";
 
@@ -32,21 +32,30 @@ export const meta: MetaFunction = () => {
     ];
 };
 
-export default function Login(): ReactElement {
-    const navigate = useNavigate();
+export async function action({ request }: ActionFunctionArgs) {
+    const loginData = await request.json();
+    const url = new URL(request.url);
+    const from = url.searchParams.get("from");
+    const response = await LoginHandler(loginData);
+    if (!response) {
+        return { error: "Invalid username or password" }
+    }
+    return redirect(from || "/", {
+        headers: { "Set-Cookie": `accessToken=${response.token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800` },
+    });
+}
 
+export default function Login(): ReactElement {
+    let fetcher = useFetcher();
     const [form, setForm] = useState<LoginRequest>({
         email: "",
         password: "",
         rememberMe: false
     });
 
-    const [loading, setLoading] = useState<boolean>(false);
     const [searchParams] = useSearchParams();
     const googleError: string | null = searchParams.get("error");
     const from = searchParams.get("from") || "/";
-
-    const [formError, setFormError] = useState<string | null>(null);
 
     function handleChange(e: React.ChangeEvent<HTMLInputElement>): void {
         const { name, value } = e.target;
@@ -59,16 +68,7 @@ export default function Login(): ReactElement {
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>): Promise<void> {
         e.preventDefault();
-        setLoading(true);
-        setFormError(null);
-
-        var response = await LoginHandler(form);
-        if (response == null) {
-            setFormError("Invalid username or password");
-            setLoading(false);
-            return;
-        }
-        navigate(from, { replace: true });
+        fetcher.submit({ ...form }, { method: "POST", encType: "application/json" });
     }
     return (
         <div className={styles.loginContainer}>
@@ -93,8 +93,8 @@ export default function Login(): ReactElement {
                             <Link to="/forgot-password" className={styles.forgotLink}>Forgot password?</Link>
                         </div>
 
-                        <button type="submit" className={styles.btnPrimary} id="submitLoginBtn" disabled={loading}>
-                            {loading ?
+                        <button type="submit" className={styles.btnPrimary} id="submitLoginBtn" disabled={fetcher.state == "submitting"}>
+                            {fetcher.state == "submitting" ?
                                 <div className={styles.spinnerContainer} id="loadingSpinner">
                                     <span className={styles.spinner}></span>
                                     <span>Loading...</span>
@@ -104,8 +104,8 @@ export default function Login(): ReactElement {
                             }
                         </button>
 
-                        {formError &&
-                            <div className={styles.errorMessage}>{formError}</div>
+                        {fetcher.data?.error &&
+                            <div className={styles.errorMessage}>{fetcher.data.error}</div>
                         }
                     </form>
 

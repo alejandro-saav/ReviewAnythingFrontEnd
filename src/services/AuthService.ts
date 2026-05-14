@@ -1,16 +1,14 @@
-import { type LoginRequest, type ForgotPasswordRequest, type RegisterRequest, type UserInformation } from "../types/AuthTypes";
+import { type LoginRequest, type ForgotPasswordRequest, type RegisterRequest } from "../types/AuthTypes";
 import { BASE_API_URL } from "../utils/const";
 
-export async function LoginHandler(loginRequest: LoginRequest): Promise<UserInformation | null> {
+export async function LoginHandler(loginRequest: LoginRequest): Promise<any> {
     try {
         var response: Response = await fetch(BASE_API_URL + "/api/auth/login", {
             method: "POST",
             body: JSON.stringify(loginRequest),
             headers: {
                 "Content-Type": "application/json",
-                "X-Client-Type": "Browser"
             },
-            credentials: "include"
         });
         if (!response.ok) {
             throw new Error();
