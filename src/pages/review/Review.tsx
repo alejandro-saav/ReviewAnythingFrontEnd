@@ -143,13 +143,13 @@ export default function Review(): ReactElement {
 
         if (vote != 1 && vote != -1) return;
 
-        fetcher.submit({ reviewId: +review?.review.reviewId, voteType: vote, type: "postVote" }, { method: "POST", encType: "application/json" });
         setReview((prev: ReviewPageData) => {
             let newReviewCount = vote == 1 && (prev.userReviewVote == -1 || prev.userReviewVote == null) ? prev.review.upVoteCount++ : prev.userReviewVote == 1 && (vote == -1 || vote == 1) ? prev.review.upVoteCount-- : prev.review.upVoteCount;
 
             let newVote = prev.userReviewVote == vote ? null : vote;
             return { ...prev, userReviewVote: newVote, review: { ...prev.review, upVoteCount: newReviewCount } }
         });
+        fetcher.submit({ reviewId: +review?.review.reviewId, voteType: vote, type: "postVote" }, { method: "POST", encType: "application/json" });
         setDisableVoteBtn(false);
     }
     return (
@@ -224,7 +224,7 @@ export default function Review(): ReactElement {
                                 <LikeDislikeBtn btnType="dislike" isActive={review.userReviewVote == -1} SubmitReviewVote={SubmitReviewVote} context="review" disable={disableVoteBtn} />
                             </div>
                         </div>
-                        <CommentSection fetcher={commentFetcher} HandleUserFollow={HandleUserFollow} comments={review.comments} userCommentVotes={review.commentVotes} usersFollowingIds={review.followedUserIds} HandleModal={setShowModal} reviewId={+review.review.reviewId!} HandleReviewPageData={setReview} />
+                        <CommentSection fetcher={commentFetcher} HandleUserFollow={HandleUserFollow} comments={review.comments.sort((a, b) => b.commentId - a.commentId)} userCommentVotes={review.commentVotes} usersFollowingIds={review.followedUserIds} HandleModal={setShowModal} reviewId={+review.review.reviewId!} HandleReviewPageData={setReview} />
                     </div >
                 </div >
             }
