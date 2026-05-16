@@ -487,9 +487,24 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
+    .hero {
+        min-height: 92vh;
+        max-height: 80vh;
+    }
+
     .heroContainer {
-        grid-template-columns: 1fr;
+        display: flex;
+        flex-direction: column;
+        width: 50%;
+        height: 80vh;
         text-align: center;
+        padding: 0;
+        justify-content: center;
+        gap: 3rem;
+    }
+
+    .heroContent p {
+        display: none;
     }
 
     .navLinks {
@@ -499,6 +514,7 @@
     .ctaButtons {
         flex-direction: column;
         align-items: center;
+        margin: 0;
     }
 
     .floatingCards {

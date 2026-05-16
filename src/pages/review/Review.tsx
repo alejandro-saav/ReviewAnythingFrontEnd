@@ -144,7 +144,7 @@ export default function Review(): ReactElement {
         if (vote != 1 && vote != -1) return;
 
         setReview((prev: ReviewPageData) => {
-            let newReviewCount = vote == 1 && (prev.userReviewVote == -1 || prev.userReviewVote == null) ? prev.review.upVoteCount++ : prev.userReviewVote == 1 && (vote == -1 || vote == 1) ? prev.review.upVoteCount-- : prev.review.upVoteCount;
+            let newReviewCount = vote == 1 && (prev.userReviewVote == -1 || prev.userReviewVote == null) ? ++prev.review.upVoteCount : prev.userReviewVote == 1 && (vote == -1 || vote == 1) ? --prev.review.upVoteCount : prev.review.upVoteCount;
 
             let newVote = prev.userReviewVote == vote ? null : vote;
             return { ...prev, userReviewVote: newVote, review: { ...prev.review, upVoteCount: newReviewCount } }
