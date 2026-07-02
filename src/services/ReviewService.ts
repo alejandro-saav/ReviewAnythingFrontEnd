@@ -1,12 +1,16 @@
 import type { Category, CommentVoteRequest, LikedReviews, ReviewPageData, Comment, WriteReviewModel, ReviewModel } from "../types/ReviewTypes";
 import { BASE_API_URL } from "../utils/const";
+import * as Sentry from "@sentry/react-router";
 
 export async function FetchCategories(): Promise<Category[] | null> {
     try {
         const response = await fetch(BASE_API_URL + "/api/categories");
-        if (!response.ok) return null;
+        if (!response.ok) throw Object.assign(new Error("categories.load.failed"), {
+            status: response.status,
+        });
         return await response.json();
     } catch (error) {
+        Sentry.captureException(error);
         return null;
     }
 }
@@ -18,9 +22,12 @@ export async function FetchLikedReviews(queryString: string, authToken: string):
                 "Authorization": `Bearer ${authToken}`
             }
         });
-        if (!response.ok) [];
+        if (!response.ok) throw Object.assign(new Error("liked_reviews.load.failed"), {
+            status: response.status,
+        });
         return await response.json();
     } catch (error) {
+        Sentry.captureException(error);
         return [];
     }
 }
@@ -33,9 +40,12 @@ export async function FetchUserReviews(queryString: string, authToken: string): 
             }
         });
 
-        if (!response.ok) [];
+        if (!response.ok) throw Object.assign(new Error("user_reviews.load.failed"), {
+            status: response.status,
+        });
         return await response.json();
     } catch (error) {
+        Sentry.captureException(error);
         return [];
     }
 }
@@ -48,9 +58,12 @@ export async function FetchReviewPageData(reviewId: number, accessToken: string 
             }
         });
 
-        if (!response.ok) return null;
+        if (!response.ok) throw Object.assign(new Error("review_paga_data.load.failed"), {
+            status: response.status,
+        });
         return await response.json();
     } catch (error) {
+        Sentry.captureException(error);
         return null;
     }
 }
@@ -66,10 +79,13 @@ export async function PostCommentVote(commentVote: CommentVoteRequest): Promise<
             }
         });
 
-        if (!response.ok) return false;
+        if (!response.ok) throw Object.assign(new Error("comment_vote.post.failed"), {
+            status: response.status,
+        });
 
         return true;
     } catch (error) {
+        Sentry.captureException(error);
         return false;
     }
 }
@@ -85,10 +101,13 @@ export async function PostComment(reviewId: number, comment: string, authToken: 
             }
         });
 
-        if (!response.ok) return null;
+        if (!response.ok) throw Object.assign(new Error("comment.post.failed"), {
+            status: response.status,
+        });
 
         return await response.json();
     } catch (error) {
+        Sentry.captureException(error);
         return null;
     }
 }
@@ -104,9 +123,12 @@ export async function PostReviewVote(reviewId: number, voteType: number, authTok
             }
         });
 
-        if (!response.ok) return null;
+        if (!response.ok) throw Object.assign(new Error("review_vote.post.failed"), {
+            status: response.status,
+        });
         return response.status;
     } catch (error) {
+        Sentry.captureException(error);
         return null;
     }
 }
@@ -121,10 +143,13 @@ export async function PostReview(review: WriteReviewModel, authToken: string): P
                 "Authorization": `Bearer ${authToken}`
             }
         });
-        if (!response.ok) return null;
+        if (!response.ok) throw Object.assign(new Error("review.post.failed"), {
+            status: response.status,
+        });
 
         return await response.json();
     } catch (error) {
+        Sentry.captureException(error);
         return null;
     }
 }
@@ -134,10 +159,13 @@ export async function GetExploreReviewPageData(queryParams: string): Promise<Lik
         const response = await fetch(BASE_API_URL + `/api/reviews/explore${queryParams}`, {
             credentials: "include",
         });
-        if (!response.ok) return [];
+        if (!response.ok) throw Object.assign(new Error("explore_review_data.load.failed"), {
+            status: response.status,
+        });
 
         return await response.json();
     } catch (error) {
+        Sentry.captureException(error);
         return [];
     }
 }

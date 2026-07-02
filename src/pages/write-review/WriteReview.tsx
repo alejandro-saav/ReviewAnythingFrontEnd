@@ -6,6 +6,7 @@ import { useForm, Controller, type SubmitHandler } from "react-hook-form";
 import styles from "./WriteReview.module.css"
 import { GetAccessTokenFromRequest, isNullOrWhiteSpace } from "../../utils/helperFunctions";
 import { redirect, useFetcher } from "react-router-dom";
+import * as Sentry from "@sentry/react-router";
 
 import type { ActionFunctionArgs, MetaFunction } from "react-router";
 import LoadingSpinner from "../../components/loadingComponents/LoadingSpinner";
@@ -36,11 +37,21 @@ export const meta: MetaFunction = () => {
 
 export async function action({ request }: ActionFunctionArgs) {
     const authToken = GetAccessTokenFromRequest(request);
-    const reviewData = await request.json();
+    const reviewData: WriteReviewModel = await request.json();
     if (!authToken) return redirect("/login");
     const response = await PostReview(reviewData, authToken);
     if (response) return redirect(`/review/${response.reviewId}`);
-    if (!response) return { error: "Something went wrong when trying to post your review, please try again." }
+    if (!response) {
+        Sentry.logger.info("review.create.failed", {
+            title: reviewData.title,
+            content: reviewData.content,
+            rating: reviewData.rating,
+            itemId: reviewData.itemId,
+            tags: reviewData.tags,
+            categoryId: reviewData.categoryId
+        });
+        return { error: "Something went wrong when trying to post your review, please try again." }
+    }
 }
 
 export default function WriteReview(): ReactElement {

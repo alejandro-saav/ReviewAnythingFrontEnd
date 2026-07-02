@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactElement } from "react";
 import styles from "./Review.module.css"
-import { Link, redirect, useFetcher, useLoaderData, useRouteLoaderData, type ClientActionFunctionArgs, type LoaderFunctionArgs, type MetaFunction } from "react-router-dom";
+import { Link, redirect, useFetcher, useLoaderData, useRouteLoaderData, type ActionFunctionArgs, type LoaderFunctionArgs, type MetaFunction } from "react-router-dom";
 import { FetchReviewPageData, PostComment, PostReviewVote } from "../../services/ReviewService";
 import type { ReviewPageData } from "../../types/ReviewTypes";
 import ProfileIcon from "../../components/ProfileIcon";
@@ -20,7 +20,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     return { reviewData: review }
 }
 
-export async function action({ request }: ClientActionFunctionArgs) {
+export async function action({ request }: ActionFunctionArgs) {
     const authToken: string | null = GetAccessTokenFromRequest(request);
     if (!authToken) return redirect("/login");
     const data = await request.json();

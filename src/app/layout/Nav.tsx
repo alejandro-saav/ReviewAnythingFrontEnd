@@ -11,7 +11,7 @@ export default function Nav(): ReactElement {
     const user: UserInformation | null | undefined = useRouteLoaderData<typeof rootLoader>("root")?.userInfo;
     const fetcher = useFetcher();
     async function HandleLogout(): Promise<void> {
-        fetcher.submit(null, { method: "POST", action: "/logout" });
+        fetcher.submit({ ...user }, { method: "POST", action: "/logout", encType: "application/json" });
         setShowModal(false);
     }
     return (

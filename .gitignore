@@ -101,3 +101,5 @@ temp/
 *.sqlite
 *.sqlite3
 *.db
+# Sentry Config File
+.env.sentry-build-plugin
