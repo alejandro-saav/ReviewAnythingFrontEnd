@@ -5,6 +5,7 @@ import type { RegisterRequest } from "../../../types/AuthTypes";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { RegisterUserHandler } from "../../../services/AuthService";
 import { useNavigate, type MetaFunction } from "react-router-dom";
+import * as Sentry from "@sentry/react-router";
 
 
 export const meta: MetaFunction = () => {
@@ -32,9 +33,15 @@ export default function SignUp(): ReactElement {
         const successResponse = await RegisterUserHandler(data);
 
         if (successResponse) {
+            Sentry.logger.info("auth.register.success", {
+                userName: data.userName,
+                firstName: data.firstName,
+                lastName: data.lastName,
+            });
             navigate("/email-confirmation-required");
             return;
         } else {
+            Sentry.logger.info("auth.register.failed");
             setErrorMessage("Something went wrong, please try again.");
         }
         setIsLoading(false);

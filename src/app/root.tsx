@@ -1,8 +1,13 @@
 import { Outlet, Scripts, ScrollRestoration, Meta, Links, type LoaderFunctionArgs, createCookie, type Cookie, data } from "react-router";
 import { GetUserInfo, PostNewVisit } from "../services/UserService.ts";
 import type { UserInformation } from "../types/AuthTypes.ts";
+import { randomUUID } from "crypto";
+import { commitSession, getSession } from "./sessions.server.ts";
+import * as Sentry from "@sentry/react-router";
 
 export async function loader({ request }: LoaderFunctionArgs) {
+    // Get session cookie to identify user for sending sentry logs
+    const session = await getSession(request.headers.get("Cookie"));
     const cookies: string[] | undefined = request.headers.get("Cookie")?.split(";");
     let visitCookie: Cookie | null = null;
     let userInfo: UserInformation | null = null;
@@ -21,16 +26,23 @@ export async function loader({ request }: LoaderFunctionArgs) {
     if (accessToken) {
         userInfo = await GetUserInfo(accessToken.substring(accessToken.indexOf("=") + 1));
     }
+    let userId = session.get("userId");
+    if (!userId) {
+        userId = userInfo?.userId || randomUUID();
+        session.set("userId", userId);
+    }
+    Sentry.setUser({ userId: userId });
     if (visitCookie) {
         const newCookie = await visitCookie.serialize("visit_tracked");
         return data(
             { userInfo: userInfo },
-            { headers: { "Set-Cookie": newCookie } }
+            { headers: [["Set-Cookie", newCookie], ["Set-Cookie", await commitSession(session)]] }
         )
     }
 
     return data(
-        { userInfo: userInfo }
+        { userInfo: userInfo },
+        { headers: { "Set-Cookie": await commitSession(session) } }
     )
 }
 

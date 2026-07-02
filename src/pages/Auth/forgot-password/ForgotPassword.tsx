@@ -4,6 +4,7 @@ import styles from './ForgotPassword.module.css';
 import { type ForgotPasswordRequest } from "../../../types/AuthTypes";
 import { ForgotPasswordHandler } from "../../../services/AuthService";
 import { Link, type MetaFunction } from "react-router-dom";
+import * as Sentry from "@sentry/react-router";
 
 
 export const meta: MetaFunction = () => {
@@ -35,7 +36,6 @@ export default function ForgotPassword(): ReactElement {
 
     async function SubmitHandler(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
-        console.log(emailReq);
         setIsLoading(true);
         if (isNullOrWhiteSpace(emailReq.email)) {
             setIsLoading(false);
@@ -45,6 +45,9 @@ export default function ForgotPassword(): ReactElement {
 
         var response = await ForgotPasswordHandler(emailReq);
         if (response) {
+            Sentry.logger.info("auth.password_reset.requested", {
+                email: emailReq.email,
+            });
             setSuccess(true);
         } else {
             setErrorMessage("Could not send reset link email, please try again.");

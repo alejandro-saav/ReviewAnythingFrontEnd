@@ -4,6 +4,7 @@ import { LoginHandler, SignInWithGoogle } from "../../../services/AuthService";
 import { Link, redirect, useFetcher, useSearchParams, type ActionFunctionArgs, type ClientLoaderFunctionArgs, type MetaFunction } from "react-router-dom";
 import GoogleBtn from "../../../components/GoogleBtn";
 import styles from "./Login.module.css";
+import * as Sentry from "@sentry/react-router";
 
 export async function loader({ request }: ClientLoaderFunctionArgs) {
     const url: URL = new URL(request.url);
@@ -13,11 +14,16 @@ export async function loader({ request }: ClientLoaderFunctionArgs) {
     if (googleCode) {
         const googleResponse = await SignInWithGoogle(googleCode);
         if (googleResponse) {
+            Sentry.logger.info("auth.google_login.success", {
+                userId: googleResponse.userResponse.userId
+            });
             return redirect(from ?? "/", {
                 headers: {
                     "Set-Cookie": `accessToken=${googleResponse.token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800`,
                 },
             });
+        } else {
+            Sentry.logger.info("auth.google_login.failed");
         }
     }
     return {}
@@ -38,8 +44,12 @@ export async function action({ request }: ActionFunctionArgs) {
     const from = url.searchParams.get("from");
     const response = await LoginHandler(loginData);
     if (!response) {
+        Sentry.logger.info("auth.login.failed");
         return { error: "Invalid username or password" }
     }
+    Sentry.logger.info("auth.login.success", {
+        userId: response.userResponse.userId,
+    });
     return redirect(from || "/", {
         headers: { "Set-Cookie": `accessToken=${response.token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800` },
     });

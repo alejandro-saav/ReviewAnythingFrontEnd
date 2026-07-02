@@ -3,6 +3,7 @@ import { isNullOrWhiteSpace } from "../../../utils/helperFunctions";
 import { Link, useSearchParams, type MetaFunction } from "react-router-dom";
 import { ResetPasswordHandler } from "../../../services/AuthService";
 import styles from "./ResetPassword.module.css";
+import * as Sentry from "@sentry/react-router";
 
 
 export const meta: MetaFunction = () => {
@@ -52,8 +53,12 @@ export default function ResetPassword(): ReactElement {
 
         var response = await ResetPasswordHandler(userId!, token!, form.password);
         if (response) {
+            Sentry.logger.info("auth.password_reset.success", {
+                userId: userId
+            });
             setSuccess(true);
         } else {
+            Sentry.logger.info("auth.password_reset.failed");
             setSuccess(false);
             setError("Unable to reset password. Check the passwords match and met all the constraints. If not try sending a new reset password to your email.");
         }

@@ -3,6 +3,7 @@ import styles from './ConfirmEmail.module.css';
 import { Link, useSearchParams, type MetaFunction } from 'react-router-dom';
 import { isNullOrWhiteSpace } from '../../../utils/helperFunctions';
 import { ConfirmEmailHandler } from '../../../services/AuthService';
+import * as Sentry from "@sentry/react-router";
 
 
 export const meta: MetaFunction = () => {
@@ -29,7 +30,12 @@ export default function ConfirmEmail() {
         }
         async function ConfirmEmail() {
             const response: boolean = await ConfirmEmailHandler(userId!, token!);
-            if (response) setIsSuccess(true);
+            if (response) {
+                Sentry.logger.info("auth.login.success", {
+                    userId: userId
+                });
+                setIsSuccess(true)
+            };
             setIsLoading(false);
         }
         ConfirmEmail();

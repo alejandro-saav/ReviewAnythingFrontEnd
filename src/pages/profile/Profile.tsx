@@ -1,10 +1,10 @@
 import { useState, type ReactElement } from "react";
 import type { UserInformation } from "../../types/AuthTypes";
 import type { UserPageData } from "../../types/PagesTypes";
-import { Link, redirect, useLoaderData, useRouteLoaderData, type LoaderFunctionArgs, type MetaFunction } from "react-router-dom";
+import { Link, redirect, useFetcher, useLoaderData, useRouteLoaderData, type ActionFunctionArgs, type LoaderFunctionArgs, type MetaFunction } from "react-router-dom";
 import { FollowUser, GetUserPageData, UnFollowUser } from "../../services/UserService";
 import SignInModal from "../../components/SignInModal";
-import { isNullOrWhiteSpace } from "../../utils/helperFunctions";
+import { GetAccessTokenFromRequest, isNullOrWhiteSpace } from "../../utils/helperFunctions";
 import styles from "./Profile.module.css";
 import type { loader as rootLoader } from "../../app/root";
 
@@ -14,6 +14,21 @@ export async function loader({ params }: LoaderFunctionArgs) {
     const userPageData: UserPageData | null = await GetUserPageData(+userId);
     if (!userPageData) return redirect("/not-found");
     return { userPageData, userId }
+}
+
+export async function action({ request }: ActionFunctionArgs) {
+    const authToken: string | null = GetAccessTokenFromRequest(request);
+    if (!authToken) return { error: "No auth token found" };
+    const data = await request.json();
+    if (data.type == "followUser") {
+        delete data.type;
+        await FollowUser(data.targetUserId, authToken);
+        return;
+    } else if (data.type == "unfollowUser") {
+        delete data.type;
+        await UnFollowUser(data.targetUserId, authToken);
+        return;
+    }
 }
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
@@ -80,6 +95,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 };
 
 export default function Profile(): ReactElement {
+    const fetcher = useFetcher();
     const user: UserInformation | null | undefined = useRouteLoaderData<typeof rootLoader>("root")?.userInfo;
     const { userPageData, userId } = useLoaderData<typeof loader>();
     const [userData, setUserData] = useState<UserPageData | null>(userPageData);
@@ -92,16 +108,12 @@ export default function Profile(): ReactElement {
             return;
         }
         if (userData?.isCurrentUserFollowing) {
-            const unfollowResponse = await UnFollowUser(+userId!);
-            if (unfollowResponse) {
-                setUserData({ ...userData, isCurrentUserFollowing: false, followers: userData.followers.filter(users => users.userId != user.userId) })
-            }
+            fetcher.submit({ targetUserId: +userId, type: "unfollowUser" }, { method: "POST", encType: "application/json" });
+            setUserData({ ...userData, isCurrentUserFollowing: false, followers: userData.followers.filter(users => users.userId != user.userId) })
         } else {
             if (userData == undefined) return;
-            const followResponse = await FollowUser(+userId!);
-            if (followResponse) {
-                setUserData({ ...userData, isCurrentUserFollowing: true, followers: [...userData.followers, user] })
-            }
+            fetcher.submit({ targetUserId: +userId, type: "followUser" }, { method: "POST", encType: "application/json" });
+            setUserData({ ...userData, isCurrentUserFollowing: true, followers: [...userData.followers, user] })
         }
     }
     return (

@@ -4,7 +4,7 @@ export type User = {
     email: string,
     firstName: string,
     lastName: string | null,
-    phoneNumber: string | null,
+    phone: string | null,
     profileImage: string | null,
     bio: string | null,
     creationDate: Date | null
@@ -31,11 +31,9 @@ export type LoginRequest = {
 
 export type LoginResponse = {
     success: boolean,
-    message: string | null,
-    errorMessage: string | null,
-    token: string | null,
+    message: string,
+    token: string,
     userResponse: User,
-    errors: string[] | null
 }
 
 export type ForgotPasswordRequest = {

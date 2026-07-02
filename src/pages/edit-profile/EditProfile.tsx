@@ -7,8 +7,8 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { DeleteAccount, UpdateUserInfo } from "../../services/UserService";
 import { redirect, useFetcher, useRouteLoaderData } from "react-router-dom";
 import type { loader as rootLoader } from "../../app/root";
-
 import type { ClientActionFunctionArgs, MetaFunction } from "react-router";
+import * as Sentry from "@sentry/react-router";
 
 export const meta: MetaFunction = () => {
     return [
@@ -26,12 +26,19 @@ export async function action({ request }: ClientActionFunctionArgs) {
         if (!authToken) return redirect("/");
         const updateProfileDataRequest = await UpdateUserInfo(data, authToken);
         if (!updateProfileDataRequest) {
+            Sentry.logger.info("profile.update.failed");
             return { postActionError: "Something went wrong, please try again." }
+        } else {
+            Sentry.logger.info("profile.update.success");
         }
     } else {
         if (!authToken) return redirect("/");
         const deleteResponse = await DeleteAccount();
-        if (!deleteResponse) return { deleteError: "Could not delete your account. Please try again." }
+        if (!deleteResponse) {
+            Sentry.logger.info("account.delete.failed");
+            return { deleteError: "Could not delete your account. Please try again." }
+        }
+        Sentry.logger.info("account.delete.success");
         return redirect("/");
     }
 }
@@ -101,13 +108,13 @@ export default function EditProfile() {
 
     const onSubmit: SubmitHandler<UpdateUserInfoRequest> = async (data) => {
         const formData = new FormData();
-        formData.append("FirstName", data.firstName ?? "");
-        formData.append("LastName", data.lastName ?? "");
-        formData.append("Bio", data.bio ?? "");
-        formData.append("DeleteImage", data.deleteImage ? "true" : "false");
+        formData.append("firstName", data.firstName ?? "");
+        formData.append("lastName", data.lastName ?? "");
+        formData.append("bio", data.bio ?? "");
+        formData.append("deleteImage", data.deleteImage ? "true" : "false");
 
         if (data.profileImage != null) {
-            formData.append("ProfileImage", data.profileImage!);
+            formData.append("profileImage", data.profileImage!);
         }
         saveFetcher.submit(formData, { method: "POST", encType: "multipart/form-data" });
     }
