@@ -2,6 +2,7 @@ import * as Sentry from '@sentry/react-router';
 import { createReadableStreamFromReadable } from '@react-router/node';
 import { renderToPipeableStream } from 'react-dom/server';
 import { ServerRouter } from 'react-router';
+import "../../instrument.server.mjs"
 
 const handleRequest = Sentry.createSentryHandleRequest({
     ServerRouter,
