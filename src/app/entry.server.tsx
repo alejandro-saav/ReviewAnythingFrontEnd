@@ -1,8 +1,8 @@
+import "../../instrument.server.mjs"
 import * as Sentry from '@sentry/react-router';
 import { createReadableStreamFromReadable } from '@react-router/node';
 import { renderToPipeableStream } from 'react-dom/server';
 import { ServerRouter } from 'react-router';
-import "../../instrument.server.mjs"
 
 const handleRequest = Sentry.createSentryHandleRequest({
     ServerRouter,
@@ -15,3 +15,7 @@ export default handleRequest;
 export const handleError = Sentry.createSentryHandleError({
     logErrors: false
 });
+
+export const instrumentations = [
+    Sentry.createSentryServerInstrumentation()
+];
