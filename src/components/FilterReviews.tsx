@@ -14,6 +14,7 @@ export default function FilterReviews({ categories, rating }: FilterProps): Reac
 
     // Get params
     const searchParam: string | null = searchParams.get("search");
+    const [searchInputValue, setSearchInputValue] = useState(searchParam);
     const categoryParam: string | null = searchParams.get("category");
     // const rating: string | null = searchParams.get("rating");
     // const sortParam: string | null = searchParams.get("sort");
@@ -37,7 +38,7 @@ export default function FilterReviews({ categories, rating }: FilterProps): Reac
         } else {
             newParams.set(key, value);
         }
-        setSearchParams(newParams);
+        setSearchParams(newParams, { replace: true });
     }
 
     // Set tag param
@@ -81,8 +82,9 @@ export default function FilterReviews({ categories, rating }: FilterProps): Reac
         <div className={styles.filtersSection}>
             <input type="text" className={styles.searchBar} placeholder="Search reviews, titles..."
                 id="searchInput" onChange={(e) => {
+                    setSearchInputValue(e.target.value);
                     HandleParam("search", e.target.value);
-                }} value={searchParam ?? ""} />
+                }} value={searchInputValue ?? ""} />
 
             <div className={styles.filtersGrid}>
                 <div className={styles.filterGroup}>

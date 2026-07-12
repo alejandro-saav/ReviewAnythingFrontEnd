@@ -30,7 +30,7 @@ Sentry.init({
 
     // Set `tracePropagationTargets` to declare which URL(s) should have trace propagation enabled
     // In production, replace "yourserver.io" with your actual backend domain
-    tracePropagationTargets: [/^\//, /^https:\/\/yourserver\.io\/api/],
+    tracePropagationTargets: [/^\//, "https://api.reviewanything.site"],
 });
 
 startTransition(() => {

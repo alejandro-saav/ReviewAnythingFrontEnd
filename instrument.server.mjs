@@ -6,7 +6,7 @@ Sentry.init({
 
   // Adds request headers and IP for users, for more info visit:
   // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#sendDefaultPii
-  sendDefaultPii: false,
+  sendDefaultPii: true,
 
   // Enable logs to be sent to Sentry
   enableLogs: false,

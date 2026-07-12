@@ -103,3 +103,5 @@ temp/
 *.db
 # Sentry Config File
 .env.sentry-build-plugin
+
+deno.lock
